@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guess the Number Game</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: radial-gradient(circle, #1f1c2c, #928dab);
+        color: white;
+      }
+      #gamecontainer {
+        text-align: center;
+        padding: 30px;
+        background-color: rgba(0, 0, 0, 0.75);
+        border-radius: 15px;
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 400px;
+        transition: transform 0.3s;
+      }
+      #gamecontainer:hover {
+        transform: scale(1.02);
+      }
+      #gamecontainer h2 {
+        font-size: 2em;
+        color: #f39c12;
+        margin-bottom: 15px;
+      }
+      #gamecontainer p {
+        margin-bottom: 10px;
+      }
+      select,
+      input[type="number"] {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0px;
+        border-radius: 10px;
+        font-size: 1em;
+        background-color: #333;
+        color: #ecf0f1;
+        border: 2px solid #444;
+        text-align: center;
+        transition: border-color 0.3s ease;
+      }
+      select:focus,
+      input[type="number"]:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+      #message {
+        font-size: 1.2rem;
+        margin-top: 15px;
+        color: #f1c40f;
+        line-height: 1.5;
+      }
+      #startGameButton {
+        display: none;
+        margin-top: 10px;
+        padding: 10px 20px;
+        border: none;
+        background-color: #3498db;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        font-size: 1.2em;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gamecontainer">
+      <h2>Guess the Number</h2>
+      <p>Choose the range, then guess the number!</p>
+      <select id="range" onchange="setRange()">
+        <option value="100">1-100</option>
+        <option value="500">1-500</option>
+        <option value="1000">1-1000</option>
+      </select>
+      <input
+        type="number"
+        id="guessInput"
+        placeholder="Enter the guess"
+        min="1"
+      />
+      <div id="message"></div>
+      <button id="startGameButton" onclick="startGame()">Start Game</button>
+      <audio id="winSound" src="win.mp3"></audio>
+      <audio id="tryAgainSound" src="input_sound.mp3"></audio>
+      <audio id="gameOverSound" src="you-lose-game-sound.mp3"></audio>
+    </div>
+
+    <script>
+      let randomNumber, maxRange, attempts, maxAttempts;
+
+      let message = document.getElementById("message");
+      let startGamebutton = document.getElementById("startGameButton");
+      const winSound = document.getElementById("winSound");
+      const tryAgainSound = document.getElementById("tryAgainSound");
+      const gameOverSound = document.getElementById("gameOverSound");
+
+      let showmessage = (text, success) => {
+        message.textContent = text;
+      };
+
+      let setRange = () => {
+        maxRange = parseInt(document.getElementById("range").value);
+        randomNumber = Math.floor(Math.random() * maxRange) + 1;
+        maxAttempts = Math.ceil(Math.log2(maxRange)) + 3;
+        attempts = 0;
+        showmessage(
+          `Guess a number between 1 and ${maxRange}.You have ${maxAttempts} attempts left`,
+          true
+        );
+        startGamebutton.style.display = "none";
+      };
+
+      let makeGuess = () => {
+        if (!maxAttempts || !maxRange) {
+          showmessage(`Please start the game first!`, false);
+          return;
+        }
+        const guess = parseInt(document.getElementById("guessInput").value);
+        attempts++;
+        if (isNaN(guess) || guess < 1 || guess > maxRange) {
+          showmessage(
+            `Please enter a valid number between 1 and ${maxRange}. Attempts left: ${
+              maxAttempts - attempts
+            }`,
+            false
+          );
+          return;
+        }
+        if (attempts > maxAttempts) {
+          gameOverSound.play();
+          showmessage(
+            `Game Over | You lost. You have used all ${maxAttempts} attempts. The number was ${randomNumber}`,
+            false
+          );
+          startGamebutton.style.display = "block";
+          return;
+        }
+        if (guess === randomNumber) {
+          winSound.play();
+          showmessage(
+            `💥 You guessed it! You win! The number was ${randomNumber}. You used ${attempts} attempts`,
+            true
+          );
+          startGamebutton.style.display = "block";
+          return;
+        } else if (guess < randomNumber) {
+          tryAgainSound.play();
+          showmessage(
+            `👇 Too low! Attempts left: ${maxAttempts - attempts}`,
+            false
+          );
+        } else {
+          tryAgainSound.play();
+          showmessage(
+            `👇 Too high! Attempts left: ${maxAttempts - attempts}`,
+            false
+          );
+        }
+        if (attempts === maxAttempts && guess != randomNumber) {
+          gameOverSound.play();
+          showmessage(
+            `Game over! You have used all ${maxAttempts} attempts. The number was ${randomNumber}`,
+            false
+          );
+        }
+      };
+
+      let startGame = () => {
+        setRange();
+        document.getElementById("guessInput").value = "";
+      };
+
+      document.getElementById("guessInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          makeGuess();
+          document.getElementById("guessInput").value = "";
+        }
+      });
+    </script>
+  </body>
+</html>
